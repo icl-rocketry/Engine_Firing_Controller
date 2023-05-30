@@ -54,7 +54,7 @@ void loop() {
     long start_time = millis();
 
     // ignites both pyro channels
-    while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 300)){
+    while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 500)){  //500
 
       digitalWrite(pyro1_pin, HIGH);
       digitalWrite(pyro2_pin, HIGH);
@@ -62,19 +62,19 @@ void loop() {
     }
 
     //move nitrous valve to pre position
-    while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 700)){
+    while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 1300)){  //900
       
-      myservo1.write(55);
-      delay(200);
+      myservo1.write(60);
+      //delay(200);
       myservo2.write(90);
 
     }
 
     //nitrous to full bore
-    while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 1000)){ 
+    while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 1600)){ //1300
 
       myservo1.write(185);
-      delay(200);
+      //delay(200);
       myservo2.write(185);
 
     }
