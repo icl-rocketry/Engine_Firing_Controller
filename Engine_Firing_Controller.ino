@@ -98,22 +98,25 @@ void loop() {
 
       chamberP = (analogRead(chamber_pressure_pin)/1024)*100;         //returns chamber pressure in bar
       fuelP = (analogRead(fuel_injector_pressure_pin)/1024)*100;      //returns fuel pressure in bar
-      if ((chamberP > 33) && (chamberP < 27) && (fuelP > 43) && (fuelP < 37)){  //condition for abnormal operation
-        demandFuelP = chamberP*123456;  //find the (non linear) function relating chamber pressure to required injector pressure
+      if ((chamberP > 33) && (chamberP < 27) && (fuelP > 43) && (fuelP < 37)){  //condition for abnormal operation, can make them tighter or wider
+        demandFuelP = chamberP*123456;  //find the (non linear) function relating chamber pressure to required injector pressure, could find analytically or expwerimentally
         error = demandFuelP - fuelP;
         FuelServoAngleDemand = FuelServoAnglePrev + Kp * error;        //Any PID controller may work
         if (FuelServoAngleDemand > 185){
-          myservo1.write(185);
+          myservo1.write(185);               //check whether this is teh correct servo
+          FuelServoAnglePrev = 185;
         }
         else if (FuelServoAngleDemand < 90){
           myservo1.write(90);
+          FuelServoAnglePrev = 90;
         }
         else{
           myservo1.write(FuelServoAngleDemand);
           FuelServoAnglePrev = FuelServoAngleDemand;
         }
       }
-      delay(50);
+      
+      delay(50); //delay to give the servo chance to start moving
     }
 
     
