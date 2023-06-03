@@ -1,4 +1,9 @@
 #include <Servo.h>
+#include <SPI.h>
+#include <SD.h>
+
+File myFile;
+const int chipSelect = 10;
 
 int ledb_pin = 10;
 int ledg_pin = 11;
@@ -15,19 +20,22 @@ int engine_fire = A1;
 int chamber_pressure_pin = A2;
 int fuel_injector_pressure_pin = A3; 
 
+String dataString;
 float chamberP;
 float fuelP;
 float demandFuelP;
 float error;
 float FuelServoAnglePrev = 185;
 float FuelServoAngleDemand;
-float Kp = 5;
+const int Kp = 5;
 
 Servo myservo1;
 Servo myservo2;
 
 void setup() {
 
+  SD.begin();
+  
   pinMode(ledb_pin, OUTPUT);
   pinMode(ledg_pin, OUTPUT);
   pinMode(ledr_pin, OUTPUT);
@@ -62,15 +70,16 @@ void setup() {
 void loop() {
   
   if (digitalRead(engine_fire) == HIGH){
-
+    myFile = SD.open("EngineConrollerData.txt", FILE_WRITE);
     delay(100);
     long start_time = millis();
 
     // ignites both pyro channels
     while((digitalRead(engine_fire) == HIGH) && (millis() - start_time < 500)){
-
       digitalWrite(pyro1_pin, HIGH);
       digitalWrite(pyro2_pin, HIGH);
+      dataString = String(millis()) + "," + String(chamberP) + "," + String(fuelP) + "," + String(demandFuelP) + "," + String(FuelServoAngleDemand);
+      myFile.println(dataString);
 
     }
 
@@ -79,6 +88,8 @@ void loop() {
       
       myservo1.write(60);
       myservo2.write(90);
+      dataString = String(millis()) + "," + String(chamberP) + "," + String(fuelP) + "," + String(demandFuelP) + "," + String(FuelServoAngleDemand);
+      myFile.println(dataString);
 
     }
 
@@ -87,6 +98,8 @@ void loop() {
 
       myservo1.write(185);
       myservo2.write(185);
+      dataString = String(millis()) + "," + String(chamberP) + "," + String(fuelP) + "," + String(demandFuelP) + "," + String(FuelServoAngleDemand);
+      myFile.println(dataString);
 
     }
 
@@ -99,7 +112,7 @@ void loop() {
       chamberP = (analogRead(chamber_pressure_pin)/1024)*100;         //returns chamber pressure in bar
       fuelP = (analogRead(fuel_injector_pressure_pin)/1024)*100;      //returns fuel pressure in bar
       if ((chamberP > 33) && (chamberP < 27) && (fuelP > 43) && (fuelP < 37)){  //condition for abnormal operation, can make them tighter or wider
-        demandFuelP = chamberP*123456;  //find the (non linear) function relating chamber pressure to required injector pressure, could find analytically or expwerimentally
+        demandFuelP = 0.016 * pow(chamberP,2) + chamberP;    //function relating demanded fuel pressure to chamber pressure
         error = demandFuelP - fuelP;
         FuelServoAngleDemand = FuelServoAnglePrev + Kp * error;        //Any PID controller may work
         if (FuelServoAngleDemand > 185){
@@ -117,6 +130,8 @@ void loop() {
       }
       
       delay(50); //delay to give the servo chance to start moving
+      dataString = String(millis()) + "," + String(chamberP) + "," + String(fuelP) + "," + String(demandFuelP) + "," + String(FuelServoAngleDemand);
+      myFile.println(dataString);
     }
 
     
@@ -131,4 +146,5 @@ void loop() {
     }
 
   }
+  myFile.close();
 }
